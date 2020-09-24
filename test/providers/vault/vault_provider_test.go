@@ -29,21 +29,21 @@ func TestVault_Provider(t *testing.T) {
 	})
 
 	Convey("Reports when the secret is not found", t, func() {
-		value, err := provider.GetValue("foobar")
+		values, err := provider.GetValues("foobar")
 		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldEqual, "HashiCorp Vault provider could not find a secret called 'foobar'")
-		So(value, ShouldBeNil)
+		So(values, ShouldBeNil)
 	})
 
 	Convey("Can provide a secret", t, func() {
-		value, err := provider.GetValue("kv/db/password#password")
+		values, err := provider.GetValues("kv/db/password#password")
 		So(err, ShouldBeNil)
-		So(string(value), ShouldEqual, "db-secret")
+		So(string(values[0]), ShouldEqual, "db-secret")
 	})
 
 	Convey("Can provide a secret with default field name", t, func() {
-		value, err := provider.GetValue("kv/web/password")
+		values, err := provider.GetValues("kv/web/password")
 		So(err, ShouldBeNil)
-		So(string(value), ShouldEqual, "web-secret")
+		So(string(values[0]), ShouldEqual, "web-secret")
 	})
 }
