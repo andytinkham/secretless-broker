@@ -29,21 +29,35 @@ func TestVault_Provider(t *testing.T) {
 	})
 
 	Convey("Reports when the secret is not found", t, func() {
-		values, err := provider.GetValues("foobar")
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldEqual, "HashiCorp Vault provider could not find a secret called 'foobar'")
-		So(values, ShouldBeNil)
+		id := "foobar"
+
+		values, err := provider.GetValues(id)
+		So(err, ShouldBeNil)
+		So(values[id], ShouldNotBeNil)
+		So(values[id].Error, ShouldNotBeNil)
+		So(values[id].Error.Error(), ShouldEqual, "HashiCorp Vault provider could not find a secret called 'foobar'")
+		So(values[id].Value, ShouldBeNil)
 	})
 
 	Convey("Can provide a secret", t, func() {
-		values, err := provider.GetValues("kv/db/password#password")
+		id := "kv/db/password#password"
+		values, err := provider.GetValues(id)
+
 		So(err, ShouldBeNil)
-		So(string(values[0]), ShouldEqual, "db-secret")
+		So(values[id], ShouldNotBeNil)
+		So(values[id].Error, ShouldBeNil)
+		So(values[id].Value, ShouldNotBeNil)
+		So(string(values[id].Value), ShouldEqual, "db-secret")
 	})
 
 	Convey("Can provide a secret with default field name", t, func() {
-		values, err := provider.GetValues("kv/web/password")
+		id := "kv/web/password"
+		values, err := provider.GetValues(id)
+
 		So(err, ShouldBeNil)
-		So(string(values[0]), ShouldEqual, "web-secret")
+		So(values[id], ShouldNotBeNil)
+		So(values[id].Error, ShouldBeNil)
+		So(values[id].Value, ShouldNotBeNil)
+		So(string(values[id].Value), ShouldEqual, "web-secret")
 	})
 }

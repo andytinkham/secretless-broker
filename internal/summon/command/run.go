@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/cyberark/summon/secretsyml"
 
@@ -52,14 +53,31 @@ func resolveSecrets(provider plugin_v1.Provider, secretsMap secretsyml.SecretsMa
 		}
 	}
 
+
 	// Get the variable values
-	valuesBytes, err := provider.GetValues(varSecretsSpecPaths...)
+	providerResponses, err := provider.GetValues(varSecretsSpecPaths...)
 	if err != nil {
 		return
 	}
-	// Transform variable values to strings
-	for idx, key := range varSecretsSpecKeys {
-		result[key] = string(valuesBytes[idx])
+
+	// Collect errors from provider responses
+	var errorStrings []string
+	for _, providerResponse := range providerResponses {
+		if providerResponse.Error != nil {
+			errorStrings = append(errorStrings, providerResponse.Error.Error())
+			continue
+		}
+	}
+	if len(errorStrings) > 0 {
+		err = fmt.Errorf(strings.Join(errorStrings, "\n"))
+		return
+	}
+
+	// Get variable values as strings
+	for _, key := range varSecretsSpecKeys {
+		spec := secretsMap[key]
+		pr := providerResponses[spec.Path]
+		result[key] = string(pr.Value)
 	}
 
 	return
